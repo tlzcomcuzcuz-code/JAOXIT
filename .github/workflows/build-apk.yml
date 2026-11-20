@@ -1,3 +1,4 @@
+
 name: Build JAOXIT APK
 
 on:
@@ -23,11 +24,15 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Build APK
+      - name: Extrair projeto Android
+        run: unzip -q JAOXIT_V1_Android.zip
+
+      - name: Construir APK
+        working-directory: JAOXIT_V1_Android
         run: gradle assembleDebug
 
-      - name: Upload APK
+      - name: Enviar APK
         uses: actions/upload-artifact@v4
         with:
           name: JAOXIT-V1-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: JAOXIT_V1_Android/app/build/outputs/apk/debug/app-debug.apk
