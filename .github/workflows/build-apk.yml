@@ -1,4 +1,4 @@
-name: Build JAOXIT APK
+name: Build JAOXIT APK V2
 
 on:
   workflow_dispatch:
@@ -26,6 +26,199 @@ jobs:
       - name: Extrair projeto Android
         run: unzip -q JAOXIT_V1_Android.zip
 
+      - name: Criar interface JAOXIT V2
+        working-directory: JAOXIT_V1_Android
+        run: |
+          cat > app/src/main/java/com/jaoxit/v1/MainActivity.kt <<'EOF'
+          package com.jaoxit.v1
+
+          import android.app.Activity
+          import android.os.Bundle
+          import android.graphics.Color
+          import android.graphics.Typeface
+          import android.view.MotionEvent
+          import android.view.View
+          import android.view.Gravity
+          import android.widget.LinearLayout
+          import android.widget.ScrollView
+          import android.widget.TextView
+          import android.widget.SeekBar
+          import android.widget.Switch
+          import android.widget.Toast
+
+          class MainActivity : Activity() {
+              private var panelVisible = true
+              private lateinit var panel: LinearLayout
+              private lateinit var root: LinearLayout
+
+              private val bg = Color.rgb(10, 10, 12)
+              private val surface = Color.rgb(25, 25, 29)
+              private val red = Color.rgb(255, 45, 65)
+              private val white = Color.WHITE
+              private val muted = Color.rgb(175, 175, 182)
+
+              override fun onCreate(savedInstanceState: Bundle?) {
+                  super.onCreate(savedInstanceState)
+                  window.statusBarColor = bg
+                  window.navigationBarColor = bg
+                  buildScreen()
+              }
+
+              private fun buildScreen() {
+                  root = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setBackgroundColor(bg)
+                      setPadding(20, 18, 20, 12)
+                  }
+
+                  val header = TextView(this).apply {
+                      text = "JAOXIT  V2"
+                      textSize = 29f
+                      setTextColor(red)
+                      typeface = Typeface.DEFAULT_BOLD
+                      gravity = Gravity.CENTER
+                      setPadding(8, 12, 8, 4)
+                  }
+                  root.addView(header)
+
+                  val subtitle = TextView(this).apply {
+                      text = "PAINEL DE CONFIGURAÇÃO"
+                      textSize = 11f
+                      letterSpacing = 0.18f
+                      setTextColor(muted)
+                      gravity = Gravity.CENTER
+                      setPadding(4, 0, 4, 18)
+                  }
+                  root.addView(subtitle)
+
+                  val hint = TextView(this).apply {
+                      text = "Dica: toque com dois dedos na tela para mostrar ou ocultar o painel."
+                      textSize = 12f
+                      setTextColor(muted)
+                      gravity = Gravity.CENTER
+                      setPadding(10, 10, 10, 12)
+                  }
+                  root.addView(hint)
+
+                  val scroll = ScrollView(this)
+                  panel = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(14, 14, 14, 18)
+                      setBackgroundColor(surface)
+                  }
+
+                  addSectionTitle("SENSIBILIDADE")
+                  addSlider("Geral", 95)
+                  addSlider("Ponto vermelho", 90)
+                  addSlider("Mira 2x", 85)
+                  addSlider("Mira 4x", 80)
+                  addSlider("Mira AWM", 50)
+
+                  addSectionTitle("RECURSOS VISUAIS")
+                  addDemoSwitch("Aimbot", "Demonstração visual — não mira automaticamente")
+                  addDemoSwitch("ESP", "Demonstração visual — não revela jogadores")
+                  addDemoSwitch("Gelo invertido", "Demonstração visual — não altera o jogo")
+
+                  val notice = TextView(this).apply {
+                      text = "AVISO: este aplicativo é independente. Não modifica arquivos, configurações ou processos do Free Fire e não oferece vantagens automáticas."
+                      textSize = 11f
+                      setTextColor(muted)
+                      setPadding(8, 22, 8, 10)
+                  }
+                  panel.addView(notice)
+
+                  scroll.addView(panel)
+                  root.addView(scroll, LinearLayout.LayoutParams(
+                      LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+                  ))
+
+                  val footer = TextView(this).apply {
+                      text = "JAOXIT • V2"
+                      textSize = 10f
+                      setTextColor(red)
+                      gravity = Gravity.CENTER
+                      setPadding(4, 12, 4, 4)
+                  }
+                  root.addView(footer)
+
+                  root.setOnTouchListener { _, event ->
+                      if (event.actionMasked == MotionEvent.ACTION_POINTER_DOWN &&
+                          event.pointerCount >= 2) {
+                          panelVisible = !panelVisible
+                          scroll.visibility = if (panelVisible) View.VISIBLE else View.GONE
+                          Toast.makeText(this, if (panelVisible) "Painel aberto" else "Painel oculto", Toast.LENGTH_SHORT).show()
+                          true
+                      } else false
+                  }
+
+                  setContentView(root)
+              }
+
+              private lateinit var currentPanel: LinearLayout
+
+              private fun addSectionTitle(label: String) {
+                  val title = TextView(this).apply {
+                      text = label
+                      textSize = 13f
+                      setTextColor(red)
+                      typeface = Typeface.DEFAULT_BOLD
+                      setPadding(4, 18, 4, 8)
+                  }
+                  panel.addView(title)
+              }
+
+              private fun addSlider(label: String, initial: Int) {
+                  val row = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(4, 7, 4, 7)
+                  }
+                  val valueText = TextView(this).apply {
+                      text = "$label  •  $initial"
+                      textSize = 14f
+                      setTextColor(white)
+                  }
+                  val seek = SeekBar(this).apply {
+                      max = 100
+                      progress = initial
+                      progressTintList = android.content.res.ColorStateList.valueOf(red)
+                      thumbTintList = android.content.res.ColorStateList.valueOf(red)
+                  }
+                  seek.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+                      override fun onProgressChanged(bar: SeekBar?, value: Int, fromUser: Boolean) {
+                          valueText.text = "$label  •  $value"
+                      }
+                      override fun onStartTrackingTouch(bar: SeekBar?) {}
+                      override fun onStopTrackingTouch(bar: SeekBar?) {}
+                  })
+                  row.addView(valueText)
+                  row.addView(seek)
+                  panel.addView(row)
+              }
+
+              private fun addDemoSwitch(label: String, detail: String) {
+                  val box = LinearLayout(this).apply {
+                      orientation = LinearLayout.VERTICAL
+                      setPadding(8, 9, 8, 9)
+                  }
+                  val toggle = Switch(this).apply {
+                      text = "$label (visual)"
+                      textSize = 14f
+                      setTextColor(white)
+                      buttonTintList = android.content.res.ColorStateList.valueOf(red)
+                  }
+                  val description = TextView(this).apply {
+                      text = detail
+                      textSize = 10f
+                      setTextColor(muted)
+                      setPadding(2, 2, 2, 0)
+                  }
+                  box.addView(toggle)
+                  box.addView(description)
+                  panel.addView(box)
+              }
+          }
+          EOF
+
       - name: Corrigir Java
         working-directory: JAOXIT_V1_Android
         run: |
@@ -39,12 +232,12 @@ jobs:
           }
           EOF
 
-      - name: Construir APK
+      - name: Construir APK V2
         working-directory: JAOXIT_V1_Android
         run: gradle assembleDebug
 
-      - name: Enviar APK
+      - name: Enviar APK V2
         uses: actions/upload-artifact@v4
         with:
-          name: JAOXIT-V1-APK
+          name: JAOXIT-V2-APK
           path: JAOXIT_V1_Android/app/build/outputs/apk/debug/app-debug.apk
