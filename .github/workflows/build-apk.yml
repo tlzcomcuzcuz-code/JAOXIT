@@ -1,4 +1,3 @@
-
 name: Build JAOXIT APK
 
 on:
@@ -26,6 +25,19 @@ jobs:
 
       - name: Extrair projeto Android
         run: unzip -q JAOXIT_V1_Android.zip
+
+      - name: Corrigir Java
+        working-directory: JAOXIT_V1_Android
+        run: |
+          cat >> app/build.gradle.kts <<'EOF'
+
+          android {
+              compileOptions {
+                  sourceCompatibility = JavaVersion.VERSION_17
+                  targetCompatibility = JavaVersion.VERSION_17
+              }
+          }
+          EOF
 
       - name: Construir APK
         working-directory: JAOXIT_V1_Android
